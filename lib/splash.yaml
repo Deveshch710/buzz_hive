@@ -1,0 +1,9 @@
+flutter_native_splash:
+  color: "#ffff33"
+  image: assets/logo/buzzhive2.png
+
+  android_12:
+    color: "#ffff33"
+    image: assets/logo/buzzhive2.png
+
+  web: false
