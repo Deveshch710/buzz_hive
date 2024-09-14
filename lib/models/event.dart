@@ -105,7 +105,7 @@ class details{
   final String collegename;
   final int roolno;
   final String branch;
-  final int year;
+  final String year;
 
   final String dp;
   final String img1url;

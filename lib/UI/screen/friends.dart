@@ -5,7 +5,6 @@ import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import '../../models/event.dart';
 import 'frienddetail/frddetails.dart';
 
-
 class FriendPage extends StatefulWidget {
   const FriendPage({Key? key}) : super(key: key);
 
@@ -18,6 +17,7 @@ class _FriendPageState extends State<FriendPage> {
   List<details> users = [];
   bool isLoading = true;
   String errorMessage = '';
+  int topCardIndex = 0;
 
   @override
   void initState() {
@@ -46,7 +46,6 @@ class _FriendPageState extends State<FriendPage> {
       setState(() {
         users = querySnapshot.docs.map((doc) {
           final data = doc.data();
-          print('Fetched user data: ${data['firstname']} ${data['lastname']}'); // Debugging line
           return details(
             firstname: data['firstName'] ?? '',
             lastname: data['lastName'] ?? '',
@@ -57,7 +56,7 @@ class _FriendPageState extends State<FriendPage> {
             collegename: data['collegeName'] ?? '',
             roolno: _parseInteger(data['rollNumber']),
             branch: data['branch'] ?? '',
-            year: _parseInteger(data['year']),
+            year: data['year'],
             dp: data['dp'] ?? '',
             img1url: data['img1url'] ?? '',
             img2url: data['img2url'] ?? '',
@@ -79,6 +78,7 @@ class _FriendPageState extends State<FriendPage> {
       });
     }
   }
+
   int _parseInteger(dynamic value) {
     if (value is int) return value;
     if (value is String) return int.tryParse(value) ?? 0;
@@ -94,20 +94,29 @@ class _FriendPageState extends State<FriendPage> {
           ? Center(child: Text(errorMessage))
           : users.isEmpty
           ? Center(child: Text('No users found'))
-          : CardSwiper(
-        controller: controller,
-        cardsCount: users.length,
-        onSwipe: _onSwipe,
-        numberOfCardsDisplayed: 5,
-        backCardOffset: const Offset(10, 20),
-        padding: const EdgeInsets.all(24.0),
-        cardBuilder: (context, index, _, __) {
-          if (index >= 0 && index < users.length) {
-            return _buildCard(users[index]);
-          } else {
-            return Container(); // Handle out-of-bounds index
-          }
-        },
+          : Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(left: 16.0),
+          ),
+          Expanded(
+            child: CardSwiper(
+              controller: controller,
+              cardsCount: users.length,
+              numberOfCardsDisplayed: 4,
+              backCardOffset: const Offset(10, 20),
+              padding: const EdgeInsets.all(24.0),
+              cardBuilder: (context, index, _, __) {
+                if (index >= 0 && index < users.length) {
+                  return _buildCard(users[index]);
+                } else {
+                  return Container(); // Handle out-of-bounds index
+                }
+              },
+              onSwipe: _onSwipe,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -186,49 +195,61 @@ class _FriendPageState extends State<FriendPage> {
     );
   }
 
-
-
   Future<bool> _onSwipe(int previousIndex, int? currentIndex, CardSwiperDirection direction) async {
-    // Ensure the currentIndex is not null
+    print('Previous Index: $previousIndex');
+    print('Current Index: $currentIndex');
+    print('Swipe Direction: $direction');
+
     if (currentIndex == null || currentIndex < 0 || currentIndex >= users.length) {
       return false;
     }
 
-    final user = users[currentIndex];
-    final useri= users[previousIndex];// Get the user for the current index
+    // Update topCardIndex to the currentIndex
+    topCardIndex = currentIndex;
+
+    final user = users[topCardIndex]; // Use the topCardIndex for actions
+    print('User at topCardIndex: ${user.firstname}');
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return false;
+
+    // Prevent sending a friend request to oneself
+    if (user.emailid == currentUser.email) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You cannot send a friend request to yourself')),
+      );
+      return false;
+    }
 
     if (direction == CardSwiperDirection.right) {
-      // Send friend request to the current user
       await _sendFriendRequest(user);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Friend request sent to ${useri.firstname}')),
+        SnackBar(content: Text('Friend request sent to ${user.firstname}')),
       );
     } else if (direction == CardSwiperDirection.left) {
-      // Just pass on the card
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passed on ${useri.firstname}')),
+        SnackBar(content: Text('Passed on ${user.firstname}')),
       );
     }
 
     return true;
   }
 
-
   Future<void> _sendFriendRequest(details targetUser) async {
-
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
-    final friendRequestsRef = FirebaseFirestore.instance.collection('friendRequests');
+    final friendRequestsRef = FirebaseFirestore.instance.collection('friend_requests');
 
     await friendRequestsRef.add({
-      'senderId': currentUser.uid,
-      'receiverId': targetUser.emailid,
+      'sender_id': currentUser.uid,
+      'sender_name': '${currentUser.displayName ?? 'Anonymous'}',
+      'sender_dp': currentUser.photoURL ?? '',
+      'receiver_id': targetUser.emailid,
       'status': 'pending',
       'timestamp': FieldValue.serverTimestamp(),
     });
 
     print('Friend request sent to ${targetUser.firstname} ${targetUser.lastname}');
   }
-
 }

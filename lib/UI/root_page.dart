@@ -6,7 +6,6 @@ import 'package:buzz_hive/UI/screen/notification/notificationbadge.dart';
 import 'package:buzz_hive/UI/screen/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../Constants.dart';
@@ -24,7 +23,8 @@ class _RootPageState extends State<RootPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
-  bool _isPanelVisible = false; // <-- Add this line
+  bool _isPanelVisible = false;
+  int _notificationCount = 0;
 
   @override
   void initState() {
@@ -45,11 +45,16 @@ class _RootPageState extends State<RootPage> {
   Future<void> _listenForFriendRequests() async {
     final user = _auth.currentUser;
     if (user != null) {
-      _firestore.collection('friend_requests').doc(user.uid).collection('requests')
+      _firestore
+          .collection('friend_requests')
+          .doc(user.uid)
+          .collection('requests')
           .snapshots()
           .listen((snapshot) {
+        int newNotifications = 0;
         for (final doc in snapshot.docs) {
           if (doc['status'] == 'pending') {
+            newNotifications++;
             _flutterLocalNotificationsPlugin.show(
               0,
               'Friend Request',
@@ -65,6 +70,9 @@ class _RootPageState extends State<RootPage> {
             );
           }
         }
+        setState(() {
+          _notificationCount = newNotifications;
+        });
       });
     }
   }
@@ -74,28 +82,44 @@ class _RootPageState extends State<RootPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Constants.secondarycolor,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              ['Home', 'Connect', 'Chat', 'Profile'][_bottomNavIndex],
-              style: TextStyle(
-                color: Constants.primarycolor,
-                fontWeight: FontWeight.w800,
-                fontSize: 30,
-              ),
-            ),
-            IconButton(
-              icon: Icon(Icons.notifications, color: Constants.primarycolor),
-              onPressed: () {
-                setState(() {
-                  _isPanelVisible = !_isPanelVisible;
-                });
-              },
-            ),
-          ],
+        title: Text(
+          ['Home', 'Connect', 'Chat', 'Profile'][_bottomNavIndex],
+          style: TextStyle(
+            color: Constants.primarycolor,
+            fontWeight: FontWeight.w800,
+            fontSize: 30,
+          ),
         ),
-        elevation: .0,
+        elevation: 0.0,
+        actions: [
+          IconButton(
+            icon: Stack(
+              children: [
+                Icon(Icons.notifications, color: Constants.primarycolor),
+                if (_notificationCount > 0)
+                  Positioned(
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 8,
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        '$_notificationCount',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: () {
+              setState(() {
+                _isPanelVisible = !_isPanelVisible;
+              });
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -108,19 +132,24 @@ class _RootPageState extends State<RootPage> {
               const profilepage(),
             ],
           ),
-          if (_isPanelVisible)
-            Positioned(
-              top: 0,
-              right: 0,
-              left: 0,
-              child: FriendRequestPanel(
-                onClose: () {
-                  setState(() {
-                    _isPanelVisible = false;
-                  });
-                },
+          Align(
+            alignment: Alignment.topCenter,
+            child: AnimatedOpacity(
+              opacity: _isPanelVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                color: Colors.white,
+                child: FriendRequestPanel(
+                  onClose: () {
+                    setState(() {
+                      _isPanelVisible = true;
+                    });
+                  },
+                ),
               ),
             ),
+          ),
         ],
       ),
       bottomNavigationBar: AnimatedBottomNavigationBar(
