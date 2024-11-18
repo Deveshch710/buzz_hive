@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';  // Import for input formatting
 
 import '../../../Constants.dart';
 import '../../../models/textfields.dart';
+import 'intrestspage.dart';
 
 class BasicDetailPage extends StatefulWidget {
   const BasicDetailPage({Key? key}) : super(key: key);
@@ -85,7 +86,7 @@ class _BasicDetailPageState extends State<BasicDetailPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Now Upload Your Image'),
+            content: Text('Now Upload Your Intrests'),
             backgroundColor: Colors.green,
           ),
         );
@@ -93,7 +94,7 @@ class _BasicDetailPageState extends State<BasicDetailPage> {
         Navigator.pushReplacement(
           context,
           PageTransition(
-            child: const photoget(),
+            child: InterestSelectionPage(),
             type: PageTransitionType.bottomToTop,
           ),
         );
@@ -125,6 +126,7 @@ class _BasicDetailPageState extends State<BasicDetailPage> {
         title: const Text('Basic Details'),
         backgroundColor: Constants.primarycolor,
       ),
+
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -277,6 +279,7 @@ class _BasicDetailPageState extends State<BasicDetailPage> {
           ),
         ),
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           if (!allFieldsFilled()) {

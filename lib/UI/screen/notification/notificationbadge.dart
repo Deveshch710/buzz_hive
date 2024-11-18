@@ -13,7 +13,7 @@ class FriendRequestPanel extends StatelessWidget {
 
     return Container(
       width: MediaQuery.of(context).size.width, // Full width
-      height: MediaQuery.of(context).size.height * 0.1, // Adjust height as needed
+      height: MediaQuery.of(context).size.height * 0.0, // Adjust height as needed
       color: Colors.white,
       child: Column(
         children: [
