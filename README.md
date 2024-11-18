@@ -22,7 +22,6 @@ Additionally, Buzz Hive seeks to eliminate the clutter and inefficiencies of usi
 ## 📱 Features
 Following are the features available in Buzz Hive:
 
-### Physical Safety Features
 
 - **Home:**
  Displays an overview of ongoing college events, important updates, and notifications from societies.
@@ -53,7 +52,7 @@ Colleges can track student engagement in events to measure the impact of their o
 ## ⚒️ Tools & Technology
 
 - **Figma (Ui/Ux Designing):** Used for designing and prototyping user interfaces and user experiences for mobile and web applications.
-- **Flutter (Mobile App Development):**Framework by Google for building natively compiled applications for mobile (iOS and Android) from a single codebase.
+- **Flutter:** (Mobile App Development):**Framework by Google for building natively compiled applications for mobile (iOS and Android) from a single codebase.
 - **Firebase:** Platform by Google for building mobile and web applications, providing services like authentication, real-time databases, and hosting.
 - **Firestore:** NoSQL cloud database by Firebase, used for storing and syncing data for client-server and mobile/web applications.
 - **GCP(Google Cloud Platform):** Google's suite of cloud computing services, offering hosting, computing, storage, and machine learning capabilities for scalable applications.
